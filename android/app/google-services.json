@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "350540986026",
+    "firebase_url": "https://glove-chemical-llc.firebaseio.com",
+    "project_id": "glove-chemical-llc",
+    "storage_bucket": "glove-chemical-llc.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:350540986026:android:6b0fadf5fbb01643",
+        "android_client_info": {
+          "package_name": "io.gitub.jtmalina.test_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "350540986026-ro5gd97i84nlumbquenbg4cs5mmfskg9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCaic7yLEa9o5rvbH19uHvn9LSdxcky72c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "350540986026-ro5gd97i84nlumbquenbg4cs5mmfskg9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
