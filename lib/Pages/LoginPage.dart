@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:test_app/Pages/NotePage.dart';
 import 'package:test_app/Services/authentication.dart';
 
 class LoginPage extends StatefulWidget {
@@ -17,7 +16,7 @@ enum FormMode { LOGIN, SIGNUP }
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = new GlobalKey<FormState>();
-  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+
   String _email;
   String _password;
   String _errorMessage;
