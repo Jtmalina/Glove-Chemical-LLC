@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:test_app/Services/authentication.dart';
+import 'package:test_app/services/authentication.dart';
 
 class LoginPage extends StatefulWidget {
   LoginPage({this.auth, this.onSignedIn});
@@ -16,7 +16,6 @@ enum FormMode { LOGIN, SIGNUP }
 
 class _LoginPageState extends State<LoginPage> {
   final _formKey = new GlobalKey<FormState>();
-
   String _email;
   String _password;
   String _errorMessage;
@@ -50,8 +49,6 @@ class _LoginPageState extends State<LoginPage> {
           print('Signed in: $userId');
         } else {
           userId = await widget.auth.signUp(_email, _password);
-          widget.auth.sendEmailVerification();
-          _showVerifyEmailSentDialog();
           print('Signed up user: $userId');
         }
         setState(() {
@@ -59,7 +56,7 @@ class _LoginPageState extends State<LoginPage> {
         });
 
         if (userId.length > 0 && userId != null && _formMode == FormMode.LOGIN) {
-          //widget.onSignedIn();
+          widget.onSignedIn();
         }
 
       } catch (e) {
@@ -69,7 +66,7 @@ class _LoginPageState extends State<LoginPage> {
           if (_isIos) {
             _errorMessage = e.details;
           } else
-            _errorMessage = "stuff";//e.message;
+            _errorMessage = e.message;
         });
       }
     }
@@ -104,7 +101,7 @@ class _LoginPageState extends State<LoginPage> {
     _isIos = Theme.of(context).platform == TargetPlatform.iOS;
     return new Scaffold(
         appBar: new AppBar(
-          title: new Text('Flutter login demo'),
+          title: new Text('Glove Chemical LLC - Login'),
         ),
         body: Stack(
           children: <Widget>[
@@ -119,28 +116,6 @@ class _LoginPageState extends State<LoginPage> {
       return Center(child: CircularProgressIndicator());
     } return Container(height: 0.0, width: 0.0,);
 
-  }
-
-  void _showVerifyEmailSentDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        // return object of type Dialog
-        return AlertDialog(
-          title: new Text("Verify your account"),
-          content: new Text("Link to verify account has been sent to your email"),
-          actions: <Widget>[
-            new FlatButton(
-              child: new Text("Dismiss"),
-              onPressed: () {
-                _changeFormToLogin();
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
   }
 
   Widget _showBody(){
@@ -265,233 +240,3 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-//this login functionality works
-/*class LoginPage extends StatefulWidget{
-  @override
-  _LoginPageState createState() => new _LoginPageState();
-}
-
-class _LoginPageState extends State<LoginPage>{
-  String _email, _password;
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  Widget build(BuildContext context){
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Sign In'),
-        backgroundColor: Colors.red[800],
-      ),
-      body: Form(
-        key: _formKey,
-        child: Column(
-          children: <Widget>[
-            TextFormField(
-              validator: (input){
-                if(input.isEmpty){
-                  return 'Please type an email';
-                }
-              },
-              onSaved: (input) => _email = input,
-              decoration: InputDecoration(
-                labelText: 'Email'
-              )
-            ),
-            TextFormField(
-              validator: (input){
-                if(input.length < 6){
-                  return 'Your password must be at least 6 characters';
-                }
-                },
-              onSaved: (input) => _password = input,
-              decoration: InputDecoration(
-                  labelText: 'Password'
-              ),
-              obscureText: true,
-            ),
-            RaisedButton(
-              onPressed: signIn,
-              child: Text('Sign In'),
-            )
-          ],
-        )
-      )
-    );
-  }
-
-  Future<void> signIn() async{
-    //validate fields
-    final formState = _formKey.currentState;
-    if(formState.validate()){
-      //if true, login to firebase
-      formState.save(); // this makes sure the variabels et saved from textbox
-      try{
-        //the login worked so go to new page
-        FirebaseUser user = await FirebaseAuth.instance.signInWithEmailAndPassword(email: _email, password: _password);
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => NotePage()),
-        );
-      }
-      catch(e){
-        //login didn't work
-        print(e.message);
-      }
-    }
-  }
-}*/
-
-
-
-//this is the old base page from lensky
-/*
-class LoginPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Glove Chemical, LLC"),
-        backgroundColor: Colors.red[800],
-      ),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            children: <Widget>[
-              Container(
-                color: Colors.grey,
-                width: 450.0,
-                padding: EdgeInsets.all(10),
-                child: Text(
-                  'Phone Number:',
-                  style: TextStyle(
-                    fontSize: 25,
-                    //background: Paint()..color = Colors.grey
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.all(10),
-                child: TextField(
-                  enableInteractiveSelection: true,
-                  autocorrect: true,
-                  autofocus: true,
-                  enabled: true,
-                  textAlign: TextAlign.center,
-                  maxLength: 13,
-                  decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: "(xxx)xxx-xxxx"
-                  ),
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.all(10),
-                color: Colors.grey,
-                width: 450.0,
-                child: Text(
-                  'PO/DEPARTMENT:',
-                  style: TextStyle(fontSize: 25),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.all(10),
-                child:TextField(
-                  enableInteractiveSelection: true,
-                  autocorrect: true,
-                  autofocus: true,
-                  enabled: true,
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: "xxxx"
-                  ),
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.all(10),
-                child:Text(
-                  'NEW USERS:',
-                  style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      decoration: TextDecoration.underline
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.all(10),
-                color: Colors.grey,
-                width: 450.0,
-                child: Text(
-                  'Facility Name:',
-                  style: TextStyle(fontSize: 25),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.all(10),
-                child: TextField(
-                  enableInteractiveSelection: true,
-                  autocorrect: true,
-                  enabled: true,
-                  autofocus: true,
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: "xxxx"
-                  ),
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.all(10),
-                color: Colors.grey,
-                width: 450.0,
-                child: Text(
-                  'Facility Address',
-                  style: TextStyle(fontSize: 25),
-                  textAlign: TextAlign.center,
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.all(10),
-                child: TextField(
-                  enableInteractiveSelection: true,
-                  maxLines: 5,
-                  autocorrect: true,
-                  autofocus: true,
-                  enabled: true,
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: "Address, City, State, Zip",
-                  ),
-                ),
-              ),
-              Container(
-                padding: EdgeInsets.all(10),
-                child: ButtonTheme(
-                  minWidth: 300,
-                  height: 45,
-                  child: RaisedButton(
-                    child: Text('Save/Send Note'),
-                    textColor: Colors.white,
-                    color: Colors.red[800],
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => NotePage()),
-                      );
-                    },
-
-                  ),
-                ),
-              ),
-
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}*/

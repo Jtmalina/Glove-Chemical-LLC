@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:test_app/pages/LoginPage.dart';
+import 'package:test_app/Pages/LoginPage.dart';
 import 'package:test_app/services/authentication.dart';
 import 'package:test_app/Pages/HomePage.dart';
 
@@ -21,6 +21,7 @@ enum AuthStatus {
 class _RootPageState extends State<RootPage> {
   AuthStatus authStatus = AuthStatus.NOT_DETERMINED;
   String _userId = "";
+  String email = "";
 
   @override
   void initState() {
@@ -29,6 +30,7 @@ class _RootPageState extends State<RootPage> {
       setState(() {
         if (user != null) {
           _userId = user?.uid;
+          email = user?.email;
         }
         authStatus =
         user?.uid == null ? AuthStatus.NOT_LOGGED_IN : AuthStatus.LOGGED_IN;
@@ -42,6 +44,9 @@ class _RootPageState extends State<RootPage> {
         _userId = user.uid.toString();
       });
     });
+    widget.auth.getUserEmail().then(
+            (String s) => setState(() {email = s;})
+    );
     setState(() {
       authStatus = AuthStatus.LOGGED_IN;
 
@@ -52,6 +57,7 @@ class _RootPageState extends State<RootPage> {
     setState(() {
       authStatus = AuthStatus.NOT_LOGGED_IN;
       _userId = "";
+      email = "";
     });
   }
 
@@ -75,6 +81,7 @@ class _RootPageState extends State<RootPage> {
           return new HomePage(
             userId: _userId,
             auth: widget.auth,
+            email: email,
             onSignedOut: _onSignedOut,
           );
         } else return _buildWaitingScreen();
@@ -85,6 +92,7 @@ class _RootPageState extends State<RootPage> {
           onSignedIn: _onLoggedIn,
         );
         break;
+
       default:
         return _buildWaitingScreen();
     }

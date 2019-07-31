@@ -1,23 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:test_app/services/authentication.dart';
 import 'package:firebase_database/firebase_database.dart';
-import 'package:test_app/models/todo.dart';
+import 'package:test_app/models/Note.dart';
+import 'package:mailer/mailer.dart';
+import 'package:mailer/smtp_server.dart';
 import 'dart:async';
 
+
+
 class HomePage extends StatefulWidget {
-  HomePage({Key key, this.auth, this.userId, this.onSignedOut})
+  HomePage({Key key, this.auth, this.userId, this.email, this.onSignedOut})
       : super(key: key);
 
   final BaseAuth auth;
   final VoidCallback onSignedOut;
   final String userId;
+  final String email;
 
   @override
   State<StatefulWidget> createState() => new _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Todo> _todoList;
+  List<Note> _todoList;
 
   final FirebaseDatabase _database = FirebaseDatabase.instance;
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
@@ -28,84 +33,21 @@ class _HomePageState extends State<HomePage> {
 
   Query _todoQuery;
 
-  bool _isEmailVerified = false;
-
   @override
   void initState() {
     super.initState();
 
-    _checkEmailVerification();
-
     _todoList = new List();
     _todoQuery = _database
         .reference()
-        .child("todo")
+        .child("notes")
+        //.child(widget.userId)
         .orderByChild("userId")
         .equalTo(widget.userId);
     _onTodoAddedSubscription = _todoQuery.onChildAdded.listen(_onEntryAdded);
     _onTodoChangedSubscription = _todoQuery.onChildChanged.listen(_onEntryChanged);
   }
 
-  void _checkEmailVerification() async {
-    _isEmailVerified = await widget.auth.isEmailVerified();
-    if (!_isEmailVerified) {
-      _showVerifyEmailDialog();
-    }
-  }
-
-  void _resentVerifyEmail(){
-    widget.auth.sendEmailVerification();
-    _showVerifyEmailSentDialog();
-  }
-
-  void _showVerifyEmailDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        // return object of type Dialog
-        return AlertDialog(
-          title: new Text("Verify your account"),
-          content: new Text("Please verify account in the link sent to email"),
-          actions: <Widget>[
-            new FlatButton(
-              child: new Text("Resent link"),
-              onPressed: () {
-                Navigator.of(context).pop();
-                _resentVerifyEmail();
-              },
-            ),
-            new FlatButton(
-              child: new Text("Dismiss"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showVerifyEmailSentDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        // return object of type Dialog
-        return AlertDialog(
-          title: new Text("Verify your account"),
-          content: new Text("Link to verify account has been sent to your email"),
-          actions: <Widget>[
-            new FlatButton(
-              child: new Text("Dismiss"),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   @override
   void dispose() {
@@ -120,13 +62,13 @@ class _HomePageState extends State<HomePage> {
     });
 
     setState(() {
-      _todoList[_todoList.indexOf(oldEntry)] = Todo.fromSnapshot(event.snapshot);
+      _todoList[_todoList.indexOf(oldEntry)] = Note.fromSnapshot(event.snapshot);
     });
   }
 
   _onEntryAdded(Event event) {
     setState(() {
-      _todoList.add(Todo.fromSnapshot(event.snapshot));
+      _todoList.add(Note.fromSnapshot(event.snapshot));
     });
   }
 
@@ -139,24 +81,47 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  _addNewTodo(String todoItem) {
-    if (todoItem.length > 0) {
+  _sendEmail(String body) async {
+    String username = 'danutam09@yahoo.com';
+    String password = 'Soyou7897';
+    String subject = 'New Order From: ' + widget.email;
 
-      Todo todo = new Todo(todoItem.toString(), widget.userId, false);
-      _database.reference().child("todo").push().set(todo.toJson());
+    final smtpServer = yahoo(username, password);
+
+    final message = Message()
+      ..from = Address(username, 'Julian')
+      ..recipients.add(widget.email)
+      ..subject = subject
+      ..text = body;
+
+    try{
+      final sendReport = await send(message, smtpServer);
+      print('Message sent: ' + sendReport.toString());
+    } on MailerException catch (e){
+      print('Message not sent.');
+      for(var p in e.problems){
+        print('Problem: ${p.code}: ${p.msg}');
+      }
     }
   }
 
-  _updateTodo(Todo todo){
+  _addNewTodo(String todoItem) {
+    if (todoItem.length > 0) {
+      Note note = new Note(widget.email, todoItem.toString(), widget.userId, false);
+      _database.reference().child("notes").push().set(note.toJson());
+    }
+  }
+
+  _updateTodo(Note todo){
     //Toggle completed
     todo.completed = !todo.completed;
     if (todo != null) {
-      _database.reference().child("todo").child(todo.key).set(todo.toJson());
+      _database.reference().child("notes").child(todo.key).set(todo.toJson());
     }
   }
 
   _deleteTodo(String todoId, int index) {
-    _database.reference().child("todo").child(todoId).remove().then((_) {
+    _database.reference().child("notes").child(todoId).remove().then((_) {
       print("Delete $todoId successful");
       setState(() {
         _todoList.removeAt(index);
@@ -175,8 +140,9 @@ class _HomePageState extends State<HomePage> {
                 new Expanded(child: new TextField(
                   controller: _textEditingController,
                   autofocus: true,
+                  maxLines: null,
                   decoration: new InputDecoration(
-                    labelText: 'Add new todo',
+                    labelText: 'Add new note',
                   ),
                 ))
               ],
@@ -191,6 +157,7 @@ class _HomePageState extends State<HomePage> {
                   child: const Text('Save'),
                   onPressed: () {
                     _addNewTodo(_textEditingController.text.toString());
+                    _sendEmail(_textEditingController.text.toString());
                     Navigator.pop(context);
                   })
             ],
@@ -206,9 +173,10 @@ class _HomePageState extends State<HomePage> {
           itemCount: _todoList.length,
           itemBuilder: (BuildContext context, int index) {
             String todoId = _todoList[index].key;
-            String subject = _todoList[index].subject;
+            String note = _todoList[index].note;
             bool completed = _todoList[index].completed;
             String userId = _todoList[index].userId;
+            String email = _todoList[index].email;
             return Dismissible(
               key: Key(todoId),
               background: Container(color: Colors.red),
@@ -217,7 +185,7 @@ class _HomePageState extends State<HomePage> {
               },
               child: ListTile(
                 title: Text(
-                  subject,
+                  note,
                   style: TextStyle(fontSize: 20.0),
                 ),
                 trailing: IconButton(
@@ -245,7 +213,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return new Scaffold(
         appBar: new AppBar(
-          title: new Text('Flutter login demo'),
+          title: new Text('Glove Chemical LLC'),
           actions: <Widget>[
             new FlatButton(
                 child: new Text('Logout',
@@ -263,4 +231,5 @@ class _HomePageState extends State<HomePage> {
         )
     );
   }
+
 }
