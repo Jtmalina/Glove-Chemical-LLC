@@ -5,13 +5,12 @@ import 'package:test_app/models/Note.dart';
 import 'package:mailer/mailer.dart';
 import 'package:mailer/smtp_server.dart';
 import 'package:mailer/smtp_server/yahoo.dart';
-import 'package:test_app/Pages/SettingsPage.dart';
 import 'dart:async';
 
 
 
-class HomePage extends StatefulWidget {
-  HomePage({Key key, this.auth, this.userId, this.email, this.onSignedOut})
+class SettingsPage extends StatefulWidget {
+  SettingsPage({Key key, this.auth, this.userId, this.email, this.onSignedOut})
       : super(key: key);
 
   final BaseAuth auth;
@@ -20,10 +19,10 @@ class HomePage extends StatefulWidget {
   final String email;
 
   @override
-  State<StatefulWidget> createState() => new _HomePageState();
+  State<StatefulWidget> createState() => new _SettingsPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _SettingsPageState extends State<SettingsPage>{
   List<Note> _todoList;
 
   final FirebaseDatabase _database = FirebaseDatabase.instance;
@@ -43,7 +42,7 @@ class _HomePageState extends State<HomePage> {
     _todoQuery = _database
         .reference()
         .child("notes")
-        //.child(widget.userId)
+    //.child(widget.userId)
         .orderByChild("userId")
         .equalTo(widget.userId);
     _onTodoAddedSubscription = _todoQuery.onChildAdded.listen(_onEntryAdded);
@@ -77,7 +76,7 @@ class _HomePageState extends State<HomePage> {
   _signOut() async {
     try {
       await widget.auth.signOut();
-      widget.onSignedOut();
+      //widget.onSignedOut();
     } catch (e) {
       print(e);
     }
@@ -114,6 +113,12 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  _updateTodo(Note todo){
+
+    /*if (todo != null) {
+      _database.reference().child("notes").child(todo.key).set(todo.toJson());
+    }*/
+  }
 
   _deleteTodo(String todoId, int index) {
     _database.reference().child("notes").child(todoId).remove().then((_) {
@@ -234,8 +239,8 @@ class _HomePageState extends State<HomePage> {
                       //_updateTodo(_todoList[index]);
                     }),
               ), onPressed: () async {
-                  _update(context, _todoList[index]);
-                },
+              _update(context, _todoList[index]);
+            },
             );
           });
     } else {
@@ -249,39 +254,31 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return new Scaffold(
         appBar: new AppBar(
-          title: new Text('Glove Chemical LLC'),
+          title: new Text('Profile'),
+          leading: new IconButton(
+              icon: Icon(
+                Icons.arrow_back,
+                color: Colors.white,
+                size: 30.0,
+              ),
+              onPressed: () {
+                Navigator.pop(context);
+              }),
           actions: <Widget>[
-            new IconButton(
-                icon: Icon(
-                  Icons.person,
-                  color: Colors.white,
-                  size: 30.0,
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    new MaterialPageRoute(builder: (context) => new SettingsPage(
-                      userId: widget.userId,
-                      auth: widget.auth,
-                      email: widget.email,
-                      onSignedOut: widget.onSignedOut,
-                    ))
-                  );
-                  //navigateToSettings(context, )
-                  /*return new SettingsPage(
-                    userId: widget.userId,
-                    auth: widget.auth,
-                    email: widget.email,
-                    //onSignedOut: widget.onSignedOut,
-                  );*/
-                }),
-            /*new FlatButton(
+            new FlatButton(
                 child: new Text('Logout',
                     style: new TextStyle(fontSize: 17.0, color: Colors.white)),
-                onPressed: _signOut)*/
+                onPressed: _signOut)
           ],
         ),
         body: _showTodoList(),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            _showDialog(context);
+          },
+          tooltip: 'Increment',
+          child: Icon(Icons.add),
+        )
     );
   }
 
